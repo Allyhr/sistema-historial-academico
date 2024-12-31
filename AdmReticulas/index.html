@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Retículas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<!-- Añade este div para el contenedor de alertas -->
+<div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+<div class="container">
+    <h2 class="my-4">Gestión de Retículas</h2>
+    
+    <!-- Botón para agregar una nueva retícula -->
+    <button class="btn btn-success mb-4" data-toggle="modal" data-target="#addModal">Agregar Retícula</button>
+
+    <!-- Tabla de retículas -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Especialidad</th>
+                <th>Materia</th>
+                <th>Semestre</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se llenarán los datos desde PHP -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para agregar nueva retícula -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Agregar Retícula</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="especialidadId">Especialidad</label>
+                        <select class="form-control" id="especialidadId" required>
+                            <!-- Opciones llenadas desde JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materiaId">Materia</label>
+                        <select class="form-control" id="materiaId" required>
+                            <!-- Opciones llenadas desde JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="semestre">Semestre</label>
+                        <input type="number" class="form-control" id="semestre" min="1" max="12" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Retícula</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar retícula -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Retícula</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editEspecialidadId">Especialidad</label>
+                        <select class="form-control" id="editEspecialidadId" required>
+                            <!-- Opciones llenadas desde JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editMateriaId">Materia</label>
+                        <select class="form-control" id="editMateriaId" required>
+                            <!-- Opciones llenadas desde JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editSemestre">Semestre</label>
+                        <input type="number" class="form-control" id="editSemestre" min="1" max="12" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para eliminar retícula -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar esta retícula?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Añade el script de notificaciones -->
+<script src="notificaciones.js"></script>
+
+<script>
+let reticuaAEliminar = null;
+
+$(document).ready(function() {
+    cargarReticulas();
+    cargarEspecialidades();
+    cargarMaterias();
+
+    // Manejar el envío del formulario de agregar retícula
+    $('#addForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            id_especialidad: $('#especialidadId').val(),
+            id_materia: $('#materiaId').val(),
+            semestre: $('#semestre').val()
+        };
+
+        $.ajax({
+            url: 'create.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#addModal').modal('hide');
+                    cargarReticulas();
+                } else {
+                    mostrarMensaje('Error al agregar la retícula', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la creación de la retícula.", 'error');
+            }
+        });
+    });
+
+    // Manejar el envío del formulario de editar retícula
+    $('#editForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            id_reticula: $(this).data('id_reticula'),
+            id_especialidad: $('#editEspecialidadId').val(),
+            id_materia: $('#editMateriaId').val(),
+            semestre: $('#editSemestre').val()
+        };
+
+        $.ajax({
+            url: 'update.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#editModal').modal('hide');
+                    cargarReticulas();
+                } else {
+                    mostrarMensaje('Error al actualizar la retícula', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la actualización de la retícula.", 'error');
+            }
+        });
+    });
+
+    $('#confirmarEliminar').click(function() {
+        if (reticuaAEliminar) {
+            $.ajax({
+                url: 'delete.php',
+                type: 'POST',
+                data: { id_reticula: reticuaAEliminar },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        mostrarMensaje(response.message, 'success');
+                        $('#deleteModal').modal('hide');
+                        cargarReticulas();
+                    } else {
+                        mostrarMensaje('Error al eliminar la retícula', "error");
+                    }
+                },
+                error: function() {
+                    mostrarMensaje("Error al eliminar la retícula.", "error");
+                }
+            });
+        }
+    });
+
+    $('#deleteModal').on('hidden.bs.modal', function () {
+        reticuaAEliminar = null;
+    });
+});
+
+function cargarReticulas() {
+    $.ajax({
+        url: 'read.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let reticuasHTML = '';
+            data.forEach(reticula => {
+                reticuasHTML += `
+                    <tr>
+                        <td>${reticula.nombre_especialidad}</td>
+                        <td>${reticula.nombre_materia}</td>
+                        <td>${reticula.semestre}</td>
+                        <td><button class="btn btn-primary" data-toggle="modal" data-target="#editModal" onclick="editarReticula(${reticula.id_reticula})">Editar</button></td>
+                        <td><button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" onclick="eliminarReticula(${reticula.id_reticula})">Eliminar</button></td>
+                    </tr>
+                `;
+            });
+            $('table tbody').html(reticuasHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar las retículas.", "error");
+        }
+    });
+}
+
+function cargarEspecialidades() {
+    $.ajax({
+        url: 'get_especialidades.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let especialidadOptions = '<option value="">Seleccione una especialidad</option>';
+            data.forEach(especialidad => {
+                especialidadOptions += `<option value="${especialidad.id_especialidad}">${especialidad.nombre}</option>`;
+            });
+            $('#especialidadId, #editEspecialidadId').html(especialidadOptions);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar las especialidades.", "error");
+        }
+    });
+}
+
+function cargarMaterias() {
+    $.ajax({
+        url: 'get_materias.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let materiaOptions = '<option value="">Seleccione una materia</option>';
+            data.forEach(materia => {
+                materiaOptions += `<option value="${materia.id_materia}">${materia.nombre_materia}</option>`;
+            });
+            $('#materiaId, #editMateriaId').html(materiaOptions);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar las materias.", "error");
+        }
+    });
+}
+
+function editarReticula(id_reticula) {
+    $.ajax({
+        url: 'get_reticula.php',
+        type: 'GET',
+        data: { id_reticula: id_reticula },
+        dataType: 'json',
+        success: function(reticula) {
+            $('#editEspecialidadId').val(reticula.id_especialidad);
+            $('#editMateriaId').val(reticula.id_materia);
+            $('#editSemestre').val(reticula.semestre);
+            $('#editForm').data('id_reticula', reticula.id_reticula);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los datos de la retícula.", "error");
+        }
+    });
+}
+
+function eliminarReticula(id_reticula) {
+    reticuaAEliminar = id_reticula;
+    $('#deleteModal').modal('show'); 
+}
+</script>
+</body>
+</html>

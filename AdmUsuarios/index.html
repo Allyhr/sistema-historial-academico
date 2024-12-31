@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Usuarios</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+<div class="container">
+    <h2 class="my-4">Gestión de Usuarios</h2>
+    
+    <button class="btn btn-success mb-3" data-toggle="modal" data-target="#addModal">Agregar Usuario</button>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre de Usuario</th>
+                <th>Perfil</th>
+                <th>Estatus</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se llenarán los datos desde PHP -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Agregar Usuario -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Agregar Usuario</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addNombreUsuario">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="addNombreUsuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addContraseña">Contraseña</label>
+                        <input type="password" class="form-control" id="addContraseña" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addPerfil">Perfil</label>
+                        <select class="form-control" id="addPerfil" required>
+                            <!-- Se llenarán los perfiles dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addEstatus">Estatus</label>
+                        <select class="form-control" id="addEstatus" required>
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Usuario -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Usuario</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editNombreUsuario">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="editNombreUsuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editContraseña">Nueva Contraseña (opcional)</label>
+                        <input type="password" class="form-control" id="editContraseña">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPerfil">Perfil</label>
+                        <select class="form-control" id="editPerfil" required>
+                            <!-- Se llenarán los perfiles dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEstatus">Estatus</label>
+                        <select class="form-control" id="editEstatus" required>
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar este usuario?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="notificaciones.js"></script>
+<script>
+let usuarioAEliminar = null;
+
+$(document).ready(function() {
+    cargarPerfiles();
+    cargarUsuarios();
+
+    $('#addForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = {
+            nombre_usuario: $('#addNombreUsuario').val(),
+            contraseña: $('#addContraseña').val(),
+            idP: $('#addPerfil').val(),
+            estatus: $('#addEstatus').val()
+        };
+
+        $.ajax({
+            url: 'create.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, 'success');
+                    $('#addModal').modal('hide');
+                    cargarUsuarios();
+                } else {
+                    mostrarMensaje(response.message || 'Error al agregar el usuario', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la creación del usuario.", 'error');
+            }
+        });
+    });
+
+    $('#editForm').on('submit', function(e) {
+        e.preventDefault();
+        const idU = $(this).data('idU');
+        const formData = {
+            idU: idU,
+            nombre_usuario: $('#editNombreUsuario').val(),
+            contraseña: $('#editContraseña').val(),
+            idP: $('#editPerfil').val(),
+            estatus: $('#editEstatus').val()
+        };
+
+        $.ajax({
+            url: 'update.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, 'success');
+                    $('#editModal').modal('hide');
+                    cargarUsuarios();
+                } else {
+                    mostrarMensaje(response.message || 'Error al actualizar el usuario', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la actualización del usuario.", 'error');
+            }
+        });
+    });
+
+    $('#confirmarEliminar').click(function() {
+        if (usuarioAEliminar) {
+            $.ajax({
+                url: 'delete.php',
+                type: 'POST',
+                data: { idU: usuarioAEliminar },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        mostrarMensaje(response.message, 'success');
+                        $('#deleteModal').modal('hide');
+                        cargarUsuarios();
+                    } else {
+                        mostrarMensaje(response.message || 'Error al eliminar el usuario', 'error');
+                    }
+                },
+                error: function() {
+                    mostrarMensaje("Error al eliminar el usuario.", "error");
+                }
+            });
+        }
+    });
+
+    $('#deleteModal').on('hidden.bs.modal', function () {
+        usuarioAEliminar = null;
+    });
+});
+
+function cargarPerfiles() {
+    $.ajax({
+        url: 'get_perfiles.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let perfilesHTML = '';
+            data.forEach(perfil => {
+                perfilesHTML += `<option value="${perfil.idP}">${perfil.nombre}</option>`;
+            });
+            $('#addPerfil, #editPerfil').html(perfilesHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los perfiles.", "error");
+        }
+    });
+}
+
+function cargarUsuarios() {
+    $.ajax({
+        url: 'read.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let usuariosHTML = '';
+            data.forEach(usuario => {
+                usuariosHTML += `
+                    <tr>
+                        <td>${usuario.idU}</td>
+                        <td>${usuario.nombre_usuario}</td>
+                        <td>${usuario.nombre_perfil}</td>
+                        <td>${usuario.estatus == 1 ? 'Activo' : 'Inactivo'}</td>
+                        <td><button class="btn btn-primary" onclick="editarUsuario(${usuario.idU})">Editar</button></td>
+                        <td><button class="btn btn-danger" onclick="eliminarUsuario(${usuario.idU})">Eliminar</button></td>
+                    </tr>
+                `;
+            });
+            $('table tbody').html(usuariosHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los usuarios.", "error");
+        }
+    });
+}
+
+function editarUsuario(idU) {
+    $.ajax({
+        url: 'get_usuario.php',
+        type: 'GET',
+        data: { idU: idU },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                const usuario = response.data;
+                $('#editNombreUsuario').val(usuario.nombre_usuario);
+                $('#editPerfil').val(usuario.idP);
+                $('#editEstatus').val(usuario.estatus);
+                $('#editForm').data('idU', usuario.idU);
+                $('#editModal').modal('show');
+            } else {
+                mostrarMensaje("Error al cargar los datos del usuario.", "error");
+            }
+        },
+        error: function() {
+            mostrarMensaje("Error en la solicitud de datos del usuario.", "error");
+        }
+    });
+}
+
+function eliminarUsuario(idU) {
+    usuarioAEliminar = idU;
+    $('#deleteModal').modal('show');
+}
+</script>
+</body>
+</html>

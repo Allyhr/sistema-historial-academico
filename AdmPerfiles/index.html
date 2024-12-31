@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Perfiles</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<!-- Añade este div para el contenedor de alertas -->
+<div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+<div class="container">
+    <h2 class="my-4">Gestión de Perfiles</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Estatus</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se llenarán los datos desde PHP -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Editar Perfil -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Perfil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="profileName">Nombre del Perfil</label>
+                        <input type="text" class="form-control" id="profileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Estatus</label>
+                        <select id="status" class="form-control">
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar este perfil?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Añade el script de notificaciones -->
+<script src="notificaciones.js"></script>
+
+<script>
+// Variable para almacenar el ID del perfil a eliminar
+let perfilAEliminar = null;
+
+$(document).ready(function() {
+    // Cargar datos de perfiles cuando la página esté lista
+    cargarPerfiles();
+
+    // Manejar el envío del formulario de edición
+    $('#editForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const idP = $(this).data('idP');
+        const formData = {
+            idP: idP,
+            nombre: $('#profileName').val(),
+            estatus: $('#status').val()
+        };
+
+        $.ajax({
+            url: 'update.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#editModal').modal('hide');
+                    cargarPerfiles();
+                } else {
+                    mostrarMensaje('Error al actualizar el perfil', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la actualización del perfil.", 'error');
+            }
+        });
+    });
+
+    // Cuando se hace clic en el botón de confirmar eliminación
+    $('#confirmarEliminar').click(function() {
+        if (perfilAEliminar) {
+            $.ajax({
+                url: 'delete.php',
+                type: 'POST',
+                data: { idP: perfilAEliminar },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        mostrarMensaje(response.message, 'success');
+                        $('#deleteModal').modal('hide');
+                        cargarPerfiles();
+                    } else {
+                        mostrarMensaje('Error al eliminar el perfil', "error");
+                    }
+                },
+                error: function() {
+                    mostrarMensaje("Error al eliminar el perfil.", "error");
+                }
+            });
+        }
+    });
+
+    // Cuando se cierra el modal de eliminación, limpiar el ID almacenado
+    $('#deleteModal').on('hidden.bs.modal', function () {
+        perfilAEliminar = null;
+    });
+});
+
+function cargarPerfiles() {
+    $.ajax({
+        url: 'read.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let perfilesHTML = '';
+            data.forEach(perfil => {
+                perfilesHTML += `
+                    <tr>
+                        <td>${perfil.nombre}</td>
+                        <td>${perfil.estatus == 1 ? 'Activo' : 'Inactivo'}</td>
+                        <td><button class="btn btn-primary" data-toggle="modal" data-target="#editModal" onclick="editarPerfil(${perfil.idP})">Editar</button></td>
+                        <td><button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" onclick="eliminarPerfil(${perfil.idP})">Eliminar</button></td>
+                    </tr>
+                `;
+            });
+            $('table tbody').html(perfilesHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los perfiles.", "error");
+        }
+    });
+}
+
+function editarPerfil(idP) {
+    $.ajax({
+        url: 'get_perfil.php',
+        type: 'GET',
+        data: { idP: idP },
+        dataType: 'json',
+        success: function(perfil) {
+            $('#profileName').val(perfil.nombre);
+            $('#status').val(perfil.estatus);
+            $('#editForm').data('idP', perfil.idP);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los datos del perfil.", "error");
+        }
+    });
+}
+
+function eliminarPerfil(idP) {
+    perfilAEliminar = idP;
+    console.log("ID a eliminar:", perfilAEliminar); // Depuración
+}
+
+</script>
+</body>
+</html>

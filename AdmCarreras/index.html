@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Carreras</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h2 class="my-4">Gestión de Carreras</h2>
+    
+    <!-- Botón para abrir el modal de agregar carrera -->
+    <button class="btn btn-success mb-3" data-toggle="modal" data-target="#addModal">Agregar Carrera</button>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nombre de Carrera</th>
+                <th>Total de Semestres</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se llenarán los datos desde PHP -->
+        </tbody>
+    </table>
+</div>
+<!-- Contenedor para notificaciones -->
+<div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+
+<!-- Modal para Agregar Carrera -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Agregar Carrera</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addNombreCarrera">Nombre de la Carrera</label>
+                        <input type="text" class="form-control" id="addNombreCarrera" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addTotalSemestres">Total de Semestres</label>
+                        <input type="number" class="form-control" id="addTotalSemestres" min="1" max="12" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Carrera</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Carrera -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Carrera</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="nombreCarrera">Nombre de la Carrera</label>
+                        <input type="text" class="form-control" id="nombreCarrera" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="totalSemestres">Total de Semestres</label>
+                        <input type="number" class="form-control" id="totalSemestres" min="1" max="12" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar esta carrera?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="notificaciones.js"></script>
+<script>
+let carreraAEliminar = null;
+
+$(document).ready(function() {
+    cargarCarreras();
+
+    // Manejo de agregar carrera
+    $('#addForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            nombre_carrera: $('#addNombreCarrera').val(),
+            total_semestres: $('#addTotalSemestres').val()
+        };
+
+        $.ajax({
+            url: 'create.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#addModal').modal('hide');
+                    cargarCarreras();
+                } else {
+                    mostrarMensaje('Error al agregar la carrera', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la creación de la carrera.", 'error');
+            }
+        });
+    });
+
+    $('#editForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const id_carrera = $(this).data('id_carrera');
+        const formData = {
+            id_carrera: id_carrera,
+            nombre_carrera: $('#nombreCarrera').val(),
+            total_semestres: $('#totalSemestres').val()
+        };
+
+        $.ajax({
+            url: 'update.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#editModal').modal('hide');
+                    cargarCarreras();
+                } else {
+                    mostrarMensaje('Error al actualizar la carrera', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la actualización de la carrera.", 'error');
+            }
+        });
+    });
+
+    $('#confirmarEliminar').click(function() {
+        if (carreraAEliminar) {
+            $.ajax({
+                url: 'delete.php',
+                type: 'POST',
+                data: { id_carrera: carreraAEliminar },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        mostrarMensaje(response.message, "success");
+                        $('#deleteModal').modal('hide');
+                        cargarCarreras();
+                    } else {
+                        mostrarMensaje('Error al eliminar la carrera', "error");
+                    }
+                },
+                error: function() {
+                    mostrarMensaje("Error al eliminar la carrera.", "error");
+                }
+            });
+        }
+    });
+
+    $('#deleteModal').on('hidden.bs.modal', function () {
+        carreraAEliminar = null;
+    });
+});
+
+function cargarCarreras() {
+    $.ajax({
+        url: 'read.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let carrerasHTML = '';
+            data.forEach(carrera => {
+                carrerasHTML += `
+                    <tr>
+                        <td>${carrera.nombre_carrera}</td>
+                        <td>${carrera.total_semestres}</td>
+                        <td><button class="btn btn-primary" data-toggle="modal" data-target="#editModal" onclick="editarCarrera(${carrera.id_carrera})">Editar</button></td>
+                        <td><button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" onclick="eliminarCarrera(${carrera.id_carrera})">Eliminar</button></td>
+                    </tr>
+                `;
+            });
+            $('table tbody').html(carrerasHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar las carreras.", "error");
+        }
+    });
+}
+
+function editarCarrera(id_carrera) {
+    $.ajax({
+        url: 'get_carrera.php',
+        type: 'GET',
+        data: { id_carrera: id_carrera },
+        dataType: 'json',
+        success: function(carrera) {
+            $('#nombreCarrera').val(carrera.nombre_carrera);
+            $('#totalSemestres').val(carrera.total_semestres);
+            $('#editForm').data('id_carrera', carrera.id_carrera);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los datos de la carrera.", "error");
+        }
+    });
+}
+
+function eliminarCarrera(id_carrera) {
+    carreraAEliminar = id_carrera;
+}
+</script>
+</body>
+</html>

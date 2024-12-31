@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Estudiantes</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<!-- Añade este div para el contenedor de alertas -->
+<div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+<div class="container">
+    <h2 class="my-4">Gestión de Estudiantes</h2>
+    
+    <!-- Botón para abrir el modal de agregar estudiante -->
+    <button class="btn btn-success mb-3" data-toggle="modal" data-target="#addModal">Agregar Estudiante</button>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Matrícula</th>
+                <th>Nombre</th>
+                <th>Apellido Paterno</th>
+                <th>Apellido Materno</th>
+                <th>Carrera</th>
+                <th>Promedio</th>
+                <th>Créditos</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se llenarán los datos desde PHP -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Agregar Estudiante -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Agregar Estudiante</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addMatricula">Matrícula</label>
+                        <input type="text" class="form-control" id="addMatricula" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addContraseña">Contraseña</label>
+                        <input type="password" class="form-control" id="addContraseña" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addNombre">Nombre</label>
+                        <input type="text" class="form-control" id="addNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addApellidoPaterno">Apellido Paterno</label>
+                        <input type="text" class="form-control" id="addApellidoPaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addApellidoMaterno">Apellido Materno</label>
+                        <input type="text" class="form-control" id="addApellidoMaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addCarrera">Carrera</label>
+                        <select class="form-control" id="addCarrera" required>
+                            <!-- Se llenarán las carreras dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addReticula">Retícula</label>
+                        <select class="form-control" id="addReticula" required>
+                            <!-- Se llenarán las retículas dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar Estudiante</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Estudiante -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Estudiante</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editMatricula">Matrícula</label>
+                        <input type="text" class="form-control" id="editMatricula" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editContraseña">Nueva Contraseña (opcional)</label>
+                        <input type="password" class="form-control" id="editContraseña">
+                    </div>
+                    <div class="form-group">
+                        <label for="editNombre">Nombre</label>
+                        <input type="text" class="form-control" id="editNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editApellidoPaterno">Apellido Paterno</label>
+                        <input type="text" class="form-control" id="editApellidoPaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editApellidoMaterno">Apellido Materno</label>
+                        <input type="text" class="form-control" id="editApellidoMaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCarrera">Carrera</label>
+                        <select class="form-control" id="editCarrera" required>
+                            <!-- Se llenarán las carreras dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editReticula">Retícula</label>
+                        <select class="form-control" id="editReticula" required>
+                            <!-- Se llenarán las retículas dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Confirmar Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar este estudiante?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Añade el script de notificaciones -->
+<script src="notificaciones.js"></script>
+<script>
+let estudianteAEliminar = null;
+
+$(document).ready(function() {
+    // Cargar carreras para los dropdowns
+    cargarCarreras();
+    
+    // Cargar estudiantes
+    cargarEstudiantes();
+
+    // Manejo de agregar estudiante
+    $('#addForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            matricula: $('#addMatricula').val(),
+            contraseña: $('#addContraseña').val(),
+            nombre: $('#addNombre').val(),
+            apellido_paterno: $('#addApellidoPaterno').val(),
+            apellido_materno: $('#addApellidoMaterno').val(),
+            id_carrera: $('#addCarrera').val(),
+            id_reticula: $('#addReticula').val()
+        };
+
+        $.ajax({
+            url: 'create.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#addModal').modal('hide');
+                    cargarEstudiantes();
+                } else {
+                    mostrarMensaje('Error al agregar el estudiante', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la creación del estudiante.", 'error');
+            }
+        });
+    });
+
+    // Manejo de editar estudiante
+    $('#editForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const idE = $(this).data('idE');
+        const formData = {
+            idE: idE,
+            matricula: $('#editMatricula').val(),
+            contraseña: $('#editContraseña').val(),
+            nombre: $('#editNombre').val(),
+            apellido_paterno: $('#editApellidoPaterno').val(),
+            apellido_materno: $('#editApellidoMaterno').val(),
+            id_carrera: $('#editCarrera').val(),
+            id_reticula: $('#editReticula').val()
+        };
+
+        $.ajax({
+            url: 'update.php',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    mostrarMensaje(response.message, response.status === 'success' ? 'success' : 'error');
+                    $('#editModal').modal('hide');
+                    cargarEstudiantes();
+                } else {
+                    mostrarMensaje('Error al actualizar el estudiante', 'error');
+                }
+            },
+            error: function() {
+                mostrarMensaje("Error en la actualización del estudiante.", 'error');
+            }
+        });
+    });
+
+    // Confirmación de eliminación
+    $('#confirmarEliminar').click(function() {
+        if (estudianteAEliminar) {
+            $.ajax({
+                url: 'delete.php',
+                type: 'POST',
+                data: { idE: estudianteAEliminar },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        mostrarMensaje(response.message, 'success');
+                        $('#deleteModal').modal('hide');
+                        cargarEstudiantes();
+                    } else {
+                        mostrarMensaje('Error al eliminar el estudiante', "error");
+                    }
+                },
+                error: function() {
+                    mostrarMensaje("Error al eliminar el estudiante.", "error");
+                }
+            });
+        }
+    });
+
+    $('#deleteModal').on('hidden.bs.modal', function () {
+        estudianteAEliminar = null;
+    });
+});
+
+function cargarCarreras() {
+    $.ajax({
+        url: '../AdmCarreras/read.php', // Asume que está en un directorio de Carreras
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let carrerasHTML = '';
+            data.forEach(carrera => {
+                carrerasHTML += `<option value="${carrera.id_carrera}">${carrera.nombre_carrera}</option>`;
+            });
+            $('#addCarrera, #editCarrera').html(carrerasHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar las carreras.", "error");
+        }
+    });
+}
+
+function cargarReticulasPorCarrera(id_carrera, selectId) {
+    $.ajax({
+        url: 'get_reticula.php', // Necesitarás crear este script
+        type: 'GET',
+        data: { id_carrera: id_carrera },
+        dataType: 'json',
+        success: function(data) {
+            let reticulasHTML = '';
+            data.forEach(reticula => {
+                reticulasHTML += `<option value="${reticula.id_reticula}">${reticula.nombre_especialidad}</option>`;
+            });
+            $(selectId).html(reticulasHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar las retículas.", "error");
+        }
+    });
+}
+
+// Cargar retículas cuando se cambia la carrera
+$('#addCarrera').change(function() {
+    cargarReticulasPorCarrera($(this).val(), '#addReticula');
+});
+
+$('#editCarrera').change(function() {
+    cargarReticulasPorCarrera($(this).val(), '#editReticula');
+});
+
+function cargarEstudiantes() {
+    $.ajax({
+        url: 'read.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            let estudiantesHTML = '';
+            data.forEach(estudiante => {
+                estudiantesHTML += `
+                    <tr>
+                        <td>${estudiante.matricula}</td>
+                        <td>${estudiante.nombre}</td>
+                        <td>${estudiante.apellido_paterno}</td>
+                        <td>${estudiante.apellido_materno}</td>
+                        <td>${estudiante.nombre_carrera}</td>
+                        <td>${estudiante.promedio_acumulado}</td>
+                        <td>${estudiante.creditos_totales}</td>
+                        <td><button class="btn btn-primary" data-toggle="modal" data-target="#editModal" onclick="editarEstudiante(${estudiante.idE})">Editar</button></td>
+                        <td><button class="btn btn-danger" data-toggle="modal" data-target="#deleteModal" onclick="eliminarEstudiante(${estudiante.idE})">Eliminar</button></td>
+                    </tr>
+                `;
+            });
+            $('table tbody').html(estudiantesHTML);
+        },
+        error: function() {
+            mostrarMensaje("Error al cargar los estudiantes.", "error");
+        }
+    });
+}
+
+
+function editarEstudiante(idE) {
+    $.ajax({
+        url: 'get_estudiante.php',
+        type: 'GET',
+        data: { idE: idE },
+        dataType: 'json',
+        success: function(response) {
+            if (response.status === 'success') {
+                const estudiante = response.data;
+                $('#editMatricula').val(estudiante.matricula);
+                $('#editNombre').val(estudiante.nombre);
+                $('#editApellidoPaterno').val(estudiante.apellido_paterno);
+                $('#editApellidoMaterno').val(estudiante.apellido_materno);
+                $('#editCarrera').val(estudiante.id_carrera);
+                
+                // Cargar retículas para la carrera seleccionada
+                cargarReticulasPorCarrera(estudiante.id_carrera, '#editReticula');
+                
+                // Establecer la retícula después de cargarlas
+                setTimeout(() => {
+                    $('#editReticula').val(estudiante.id_reticula);
+                }, 100);
+                
+                $('#editForm').data('idE', estudiante.idE);
+            } else {
+                mostrarMensaje("Error al cargar los datos del estudiante.", "error");
+            }
+        },
+        error: function() {
+            mostrarMensaje("Error en la solicitud de datos del estudiante.", "error");
+        }
+    });
+}
+
+function eliminarEstudiante(idE) {
+    estudianteAEliminar = idE;
+}
+</script>
+</body>
+</html>
